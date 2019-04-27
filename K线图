@@ -1,0 +1,82 @@
+def Kst(list):
+	#保存横坐标值，用整数替代
+	k_list = copy.deepcopy(list)
+	temp_i = 1
+	data_m = ["Time"]
+	for each in k_list:
+		data_m.append(each[0])
+		each[0] = temp_i
+		temp_i += 1
+
+	dfcvs = DataFrame(k_list)
+
+	dfcvs.columns = ['时间','开盘','最高','最低','收盘']
+	data_mat=dfcvs.as_matrix()
+	
+	fig,ax=plt.subplots(figsize=(1200/72,480/72))
+	fig.subplots_adjust(bottom=0.1)
+
+	#绘图
+	mpf.candlestick_ohlc(ax,data_mat,colordown='#53c156', colorup='#ff1717',width=0.4,alpha=1)
+	
+	#将整数转换为横坐标值
+	class MyFormatter(Formatter):
+				def __init__(self):
+					pass
+		
+				def __call__(self, x, pos=0):
+					'Return the label for time x at position pos'
+					ind = int(np.round(x))
+					#ind就是x轴的刻度数值，不是日期的下标
+					
+					if ind<0 or ind>len(data_m)-1:
+						return ''
+					return data_m[int(ind)]
+			
+	formatter = MyFormatter()
+	ax.xaxis.set_major_formatter(formatter)
+	
+	#网格
+	ax.grid(True)
+	#X轴
+	#ax.set(xlim=(ax.get_xlim()[1]-60, ax.get_xlim()[1]))
+	
+	#鼠标指令，点击，释放，滚轮
+	def on_key_press(event):
+		x = int(np.round(event.xdata))
+		print list[x-1]
+	def on_key_release(event):
+		pass
+	def call_back(event):
+		axtemp=event.inaxes
+		x_min, x_max = axtemp.get_xlim()
+		fanwei_x = (x_max - x_min) / 10
+		if event.button == 'up':
+			axtemp.set(xlim=(x_min + fanwei_x, x_max - fanwei_x))
+		elif event.button == 'down':
+			axtemp.set(xlim=(x_min - fanwei_x, x_max + fanwei_x))
+		fig.canvas.draw_idle()  # 绘图动作实时反映在图像上
+	'''
+	#X,Y同时缩放
+	def call_back(event):
+		axtemp=event.inaxes
+		x_min, x_max = axtemp.get_xlim()
+		y_min, y_max = axtemp.get_ylim()
+		fanwei_x = (x_max - x_min) / 10
+		fanwei_y = (y_max - y_min) / 10
+		if event.button == 'up':
+			axtemp.set(xlim=(x_min + fanwei_x, x_max - fanwei_x))
+			axtemp.set(ylim=(y_min + fanwei_y, y_max - fanwei_y))
+		elif event.button == 'down':
+			axtemp.set(xlim=(x_min - fanwei_x, x_max + fanwei_x))
+			axtemp.set(ylim=(y_min - fanwei_y, y_max + fanwei_y))
+		fig.canvas.draw_idle()  # 绘图动作实时反映在图像上
+	'''	
+	fig.canvas.mpl_connect('scroll_event', call_back)
+	fig.canvas.mpl_connect('button_press_event', on_key_press)
+	fig.canvas.mpl_connect('button_release_event', on_key_release)
+	
+	#坐标轴倾斜
+	#plt.xticks(rotation=15)
+	
+	plt.show()
